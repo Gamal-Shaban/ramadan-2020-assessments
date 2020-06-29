@@ -20,7 +20,7 @@ var VideoRequestsSchema = mongoose.Schema(
       date: { type: String, default: '' },
     },
   },
-  { timestamps: { createdAt: 'submit_date', updatedAt: 'update_date' } }
+  { timestamps: { createdAt: 'submit_date', updatedAt: 'update_date' } },
 );
 
 var videoRequestsModel = mongoose.model('VideoRequests', VideoRequestsSchema);

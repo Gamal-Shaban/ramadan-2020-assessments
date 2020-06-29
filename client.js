@@ -1,4 +1,17 @@
-function getSingleVidReq(vidInfo) {
+const listOfVidsElm = document.getElementById("listOfRequests")
+
+function loadAllVidReq(sortBy = "newFirst") {
+  fetch(`http://localhost:7777/video-request?sortBy=${sortBy}`)
+    .then((bolb) => bolb.json())
+    .then((data) => {
+      listOfVidsElm.innerHTML = ""
+      data.forEach((vidInfo) => {
+        renderSingleVidReq(vidInfo)
+      })
+    })
+}
+
+function renderSingleVidReq(vidInfo, isPrepend = false) {
   const vidReqContainerElm = document.createElement("div")
   vidReqContainerElm.innerHTML = `
           <div class="card mb-3">
@@ -7,20 +20,27 @@ function getSingleVidReq(vidInfo) {
                 <h3>${vidInfo.topic_title}</h3>
                 <p class="text-muted mb-2">${vidInfo.topic_details}</p>
                 <p class="mb-0 text-muted">
-                  <strong>Expected results:</strong> ${vidInfo.expected_result}
+                 ${
+                   vidInfo.expected_result &&
+                   `<strong>Expected results:</strong> ${vidInfo.expected_result}`
+                 }
                 </p>
               </div>
               <div class="d-flex flex-column text-center">
-                <a class="btn btn-link">🔺</a>
-                <h3>0</h3>
-                <a class="btn btn-link">🔻</a>
+                <a id="vote_ups_${vidInfo._id}" class="btn btn-link">🔺</a>
+                <h3 id="vote_score_${vidInfo._id}">${
+    vidInfo.votes.ups - vidInfo.votes.downs
+  }</h3>
+                <a id="vote_downs_${vidInfo._id}" class="btn btn-link">🔻</a>
               </div>
             </div>
             <div class="card-footer d-flex flex-row justify-content-between">
               <div>
                 <span class="text-info">${vidInfo.status.toUpperCase()}</span>
                 &bullet; added by <strong>${vidInfo.author_name}</strong> on
-                <strong>${new Date(vidInfo.submit_date).toLocaleDateString()}</strong>
+                <strong>${new Date(
+                  vidInfo.submit_date
+                ).toLocaleDateString()}</strong>
               </div>
               <div
                 class="d-flex justify-content-center flex-column 408ml-auto mr-2"
@@ -32,30 +52,85 @@ function getSingleVidReq(vidInfo) {
             </div>
           </div>
           `
-  return vidReqContainerElm
+  if (isPrepend) {
+    listOfVidsElm.prepend(vidReqContainerElm)
+  } else {
+    listOfVidsElm.appendChild(vidReqContainerElm)
+  }
+  const voteUpsElm = document.getElementById(`vote_ups_${vidInfo._id}`)
+  const voteDownsElm = document.getElementById(`vote_downs_${vidInfo._id}`)
+  const voteScoreElm = document.getElementById(`vote_score_${vidInfo._id}`)
+
+  voteUpsElm.addEventListener("click", (e) => {
+    const Id = vidInfo._id
+    const Body = JSON.stringify({
+      id: Id,
+      vote_type: "ups",
+    })
+
+    fetch("http://localhost:7777/video-request/vote", {
+      method: "PUT",
+      headers: {
+        "content-Type": "application/json",
+      },
+      body: Body,
+    })
+      .then((bolb) => bolb.json())
+      .then((data) => {
+        voteScoreElm.innerText = data.ups - data.downs
+      })
+  })
+
+  voteDownsElm.addEventListener("click", (e) => {
+    const Id = vidInfo._id
+    const Body = JSON.stringify({
+      id: Id,
+      vote_type: "downs",
+    })
+    fetch("http://localhost:7777/video-request/vote", {
+      method: "PUT",
+      headers: {
+        "content-Type": "application/json",
+      },
+      body: Body,
+    })
+      .then((bolb) => bolb.json())
+      .then((data) => {
+        voteScoreElm.innerText = data.ups - data.downs
+      })
+  })
 }
 
 document.addEventListener("DOMContentLoaded", function () {
   const formVidReqElm = document.getElementById("formVideoRequest")
-  const listOfVidsElm = document.getElementById("listOfRequests")
+  const sortByElms = document.querySelectorAll("[id*=sort_by_]")
 
-  fetch("http://localhost:7777/video-request")
-    .then((blob) => blob.json())
-    .then((data) => {
-      data.forEach((vidInfo) => {
-        listOfVidsElm.appendChild(getSingleVidReq(vidInfo))
-      })
+  loadAllVidReq()
+  sortByElms.forEach((elm) => {
+    elm.addEventListener("click", function (e) {
+      e.preventDefault()
+      const sortBy = this.querySelector("input")
+      loadAllVidReq(sortBy.value)
+      this.classList.add("active")
+
+      if (sortBy.value === "topVotedFirst") {
+        document.getElementById("sort_by_new").classList.remove("active")
+      } else {
+        document.getElementById("sort_by_top").classList.remove("active")
+      }
     })
+  })
 
   formVidReqElm.addEventListener("submit", (e) => {
     e.preventDefault()
-    console.log("eeee", e)
     const formData = new FormData(formVidReqElm)
     fetch("http://localhost:7777/video-request", {
       method: "POST",
       body: formData,
-    }).then((res) => {
-      console.log("res")
     })
+      .then((bolb) => bolb.json())
+      .then((data) => {
+        renderSingleVidReq(data, true)
+      })
   })
 })
