@@ -1,7 +1,11 @@
 const listOfVidsElm = document.getElementById("listOfRequests")
+let sortBy = "newFirst"
+let searchTerm = ""
 
-function loadAllVidReq(sortBy = "newFirst") {
-  fetch(`http://localhost:7777/video-request?sortBy=${sortBy}`)
+function loadAllVidReq(sortBy = "newFirst", searchTerm = "") {
+  fetch(
+    `http://localhost:7777/video-request?sortBy=${sortBy}&searchTerm=${searchTerm}`
+  )
     .then((bolb) => bolb.json())
     .then((data) => {
       listOfVidsElm.innerHTML = ""
@@ -101,16 +105,25 @@ function renderSingleVidReq(vidInfo, isPrepend = false) {
   })
 }
 
+function debounce(fn, time) {
+  let timeout
+  return function (...args) {
+    clearTimeout(timeout)
+    timeout = setTimeout(() => fn.apply(this, args), time)
+  }
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   const formVidReqElm = document.getElementById("formVideoRequest")
   const sortByElms = document.querySelectorAll("[id*=sort_by_]")
+  const searchBoxElm = document.getElementById("search_box")
 
   loadAllVidReq()
   sortByElms.forEach((elm) => {
     elm.addEventListener("click", function (e) {
       e.preventDefault()
-      const sortBy = this.querySelector("input")
-      loadAllVidReq(sortBy.value)
+      sortBy = this.querySelector("input").value
+      loadAllVidReq(sortBy, searchTerm)
       this.classList.add("active")
 
       if (sortBy.value === "topVotedFirst") {
@@ -120,6 +133,14 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     })
   })
+
+  searchBoxElm.addEventListener(
+    "input",
+    debounce((e) => {
+      searchTerm = e.target.value
+      loadAllVidReq(sortBy, searchTerm)
+    }, 300)
+  )
 
   formVidReqElm.addEventListener("submit", (e) => {
     e.preventDefault()
