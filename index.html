@@ -12,16 +12,21 @@
   <body>
     <div class="container my-5">
       <div class="formContainer my-5">
-        <form id="formVideoRequest">
+        <form id="formVideoRequest" novalidate >
           <div class="row">
             <div class="col-md">
               <div class="form-group">
-                <label for="author_name">Your name *</label>
+                <label for="author_name" >Your name *</label>
                 <input
-                  class="form-control"
+                  class="form-control "
                   name="author_name"
+                  type='text'
+                  required
                   placeholder="Write your name here"
                 />
+                <p class="invalid-feedback" >
+                  this.field is required
+                </p>
               </div>
             </div>
             <div class="col-md">
@@ -30,8 +35,13 @@
                 <input
                   class="form-control"
                   name="author_email"
+                  type='email'
+                  required
                   placeholder="Write your email here"
                 />
+                <p class="invalid-feedback" >
+                  this.field is required and should is valid email
+                </p>
               </div>
             </div>
           </div>
@@ -43,8 +53,13 @@
                 <input
                   class="form-control"
                   name="topic_title"
+                  type='text'
+                  required
                   placeholder="Write your suggested topic here"
                 />
+                <p class="invalid-feedback" >
+                  this.field is required and should more than 30 character
+                </p>
               </div>
             </div>
             <div class="col-md">
@@ -69,8 +84,12 @@
                 <textarea
                   class="form-control"
                   name="topic_details"
+                  required
                   placeholder="Write your topic in more details here"
                 ></textarea>
+                <p class="invalid-feedback" >
+                  this.field is required
+                </p>
               </div>
             </div>
             <div class="col-md">
